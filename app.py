@@ -5,17 +5,31 @@ from streamlit_option_menu import option_menu
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate,PromptTemplate
 from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate, ChatPromptTemplate
-# from dotenv import load_dotenv
-# load_dotenv()
 
-## load the GROQ And OpenAI API KEY 
-# groq_api_key=os.getenv('GROQ_API_KEY')
-groq_api_key=st.secrets["groq_api_key"]
-llm=ChatGroq(groq_api_key=groq_api_key,model_name="Llama3-8b-8192")
+from dotenv import load_dotenv
+load_dotenv()
+groq_api_key=os.getenv('GROQ_API_KEY')
 
-st.title("LISA : LLM Informed Statistical Analysis")
-uploaded_file=st.file_uploader("Upload a CSV file",type=['csv'])
+# groq_api_key=st.secrets["groq_api_key"]
+llm=ChatGroq(groq_api_key=groq_api_key,model_name="llama3-70b-8192")
 
+st.set_page_config(page_title="LISA : LLM Informed Statistical Analysis",
+                    page_icon=":books:",layout = "wide")
+
+st.header("Welcome to LISA: LLM Informed Statistical Analysis", divider='rainbow')
+st.markdown("LISA is an innovative platform designed to automate your data analysis process using advanced Large Language Models (LLM) for insightful inferences. Whether you're a data enthusiast, researcher, or business analyst, LISA simplifies complex data tasks, providing clear and comprehensible explanations for your data.")
+st.markdown("LISA combines the efficiency of automated data processing with the intelligence of modern language models to deliver a seamless and insightful data analysis experience. Empower your data with LISA!")
+st.divider()
+
+
+# # Display the image using st.image
+# st.image('D:/Modular Coding/modular_coding/Designer (2).png', width=700, caption='LISA: LLM Informed Statistical Analysis', use_column_width=True)
+
+
+with st.sidebar:
+    uploaded_file=st.file_uploader("Upload a CSV file",type=['csv'])
+    
+    
 if uploaded_file is not None:
     df=pd.read_csv(uploaded_file)
     st.write(df.head())
@@ -42,7 +56,7 @@ if uploaded_file is not None:
         "You are StatBot, an expert statistical analyst. "
         "Explain the output in simple English.")
         humanmessageprompt = HumanMessagePromptTemplate.from_template(
-        'The columns in the datset are: {columns}')
+        'The columns in the dataset are: {columns}')
         
         chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
         formattedchatprompt = chatprompt.format_messages(columns=column_description)
@@ -65,13 +79,13 @@ if uploaded_file is not None:
             return df_check 
         
         df_check = check(df)
-        # st.dataframe(df_check)
+        st.dataframe(df_check)
 
         systemmessageprompt = SystemMessagePromptTemplate.from_template( 
         "You are StatBot, an expert statistical analyst. "
         "Explain the output in simple English.")
         humanmessageprompt = HumanMessagePromptTemplate.from_template(
-        'The columns in the datset are: {df_check}')
+        'The columns in the dataset are: {df_check}')
         
         chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
         formattedchatprompt = chatprompt.format_messages(df_check=df_check)
@@ -87,7 +101,7 @@ if uploaded_file is not None:
         "You are StatBot, an expert statistical analyst. "
         "Explain the output in simple English.")
         humanmessageprompt = HumanMessagePromptTemplate.from_template(
-        'The columns in the datset are: {columns}')
+        'The columns in the dataset are: {columns}')
         
         chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
         formattedchatprompt = chatprompt.format_messages(columns=descibe_numerical)
@@ -107,7 +121,7 @@ if uploaded_file is not None:
         "You are StatBot, an expert statistical analyst. "
         "Explain the output in simple English.")
         humanmessageprompt = HumanMessagePromptTemplate.from_template(
-        'The columns in the datset are: {columns}')
+        'The columns in the dataset are: {columns}')
         
         chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
         formattedchatprompt = chatprompt.format_messages(columns=des2)
