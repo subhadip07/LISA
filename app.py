@@ -5,7 +5,7 @@ from streamlit_option_menu import option_menu
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate,PromptTemplate
 from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate, ChatPromptTemplate
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 load_dotenv()
 
 ## load the GROQ And OpenAI API KEY 
