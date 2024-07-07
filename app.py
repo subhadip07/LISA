@@ -6,11 +6,11 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate,PromptTemplate
 from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate, ChatPromptTemplate
 
-from dotenv import load_dotenv
-load_dotenv()
-groq_api_key=os.getenv('GROQ_API_KEY')
+# from dotenv import load_dotenv
+# load_dotenv()
+# groq_api_key=os.getenv('GROQ_API_KEY')
 
-# groq_api_key=st.secrets["groq_api_key"]
+groq_api_key=st.secrets["groq_api_key"]
 llm=ChatGroq(groq_api_key=groq_api_key,model_name="llama3-70b-8192")
 
 st.set_page_config(page_title="LISA : LLM Informed Statistical Analysis",
