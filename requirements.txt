@@ -7,3 +7,4 @@ streamlit
 scikit-learn
 seaborn
 plotly
+python-dotenv
