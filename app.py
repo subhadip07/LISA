@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from st_aggrid import AgGrid
 import os
 from streamlit_option_menu import option_menu
 from langchain_groq import ChatGroq
@@ -9,8 +10,7 @@ from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTem
 from dotenv import load_dotenv
 load_dotenv()
 
-st.set_page_config(page_title="LISA : LLM Informed Statistical Analysis ",
-                    page_icon=":books:",layout = "wide")
+st.set_page_config(page_title="LISA : LLM Informed Statistical Analysis ",page_icon=":books:",layout = "wide")
 
 st.header("Welcome to LISA: LLM Informed Statistical Analysis 🎈", divider='rainbow')
 st.markdown("LISA is an innovative platform designed to automate your data analysis process using advanced Large Language Models (LLM) for insightful inferences. Whether you're a data enthusiast, researcher, or business analyst, LISA simplifies complex data tasks, providing clear and comprehensible explanations for your data.")
@@ -20,11 +20,13 @@ st.divider()
 with st.sidebar:
     st.markdown(
             "## How to use\n"
-            "1. Enter your [Groq API key](https://console.groq.com/keys) below🔑\n"  # noqa: E501
+            "1. Enter your [Groq API key](https://console.groq.com/keys) below🔑\n" 
             "2. Upload a CSV file📄\n"
             "3. Let LISA do it's work!!!💬\n"
         )
-    groq_api_key = st.text_input("Enter your Groq API key:", type="password")
+    groq_api_key = st.text_input("Enter your Groq API key:", type="password",
+            placeholder="Paste your Groq API key here (gsk_...)",
+            help="You can get your API key from https://console.groq.com/keys")
     
     st.divider()
     uploaded_file = st.file_uploader("Upload a CSV file", type=['csv'])
@@ -39,7 +41,7 @@ if groq_api_key:
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-    st.write(df.head())
+    AgGrid(df,theme="alpine")
     st.divider()
 
     option = st.selectbox("Select an option:", ["Show dataset dimensions","Display data description","Verify data integrity", "Summarize numerical data statistics", "Summarize categorical data"])
@@ -106,8 +108,8 @@ if uploaded_file is not None:
             st.write(response)
             
         elif option == "Summarize numerical data statistics":
-            descibe_numerical = df.describe().T
-            st.dataframe(descibe_numerical)
+            describe_numerical = df.describe().T
+            st.dataframe(describe_numerical)
         
             systemmessageprompt = SystemMessagePromptTemplate.from_template( 
             "You are StatBot, an expert statistical analyst. "
@@ -116,7 +118,7 @@ if uploaded_file is not None:
             'The columns in the dataset are: {columns}')
             
             chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
-            formattedchatprompt = chatprompt.format_messages(columns=descibe_numerical)
+            formattedchatprompt = chatprompt.format_messages(columns=describe_numerical)
             response = llm.invoke(formattedchatprompt)
             response = response.content
             st.write(response)
@@ -126,8 +128,8 @@ if uploaded_file is not None:
             if categorical_df.empty:
                 st.write("No categorical columns found.")
             else:
-                des2 = categorical_df.describe()
-                st.dataframe(des2)
+                describe_categorical = categorical_df.describe()
+                st.dataframe(describe_categorical)
                 
             systemmessageprompt = SystemMessagePromptTemplate.from_template( 
             "You are StatBot, an expert statistical analyst. "
@@ -136,7 +138,7 @@ if uploaded_file is not None:
             'The columns in the dataset are: {columns}')
             
             chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
-            formattedchatprompt = chatprompt.format_messages(columns=des2)
+            formattedchatprompt = chatprompt.format_messages(columns=describe_categorical)
             response = llm.invoke(formattedchatprompt)
             response = response.content
             st.write(response)
