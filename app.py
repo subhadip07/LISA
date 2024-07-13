@@ -6,11 +6,15 @@ from streamlit_option_menu import option_menu
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate,PromptTemplate
 from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate, ChatPromptTemplate
+from langchain_core.messages import HumanMessage,AIMessage
+from langchain_core.output_parsers import StrOutputParser
+import os
 
 from dotenv import load_dotenv
 load_dotenv()
 
 st.set_page_config(page_title="LISA : LLM Informed Statistical Analysis ",page_icon=":books:",layout = "wide")
+tab1,tab2=st.tabs(["Home","ChatBot"])
 
 def check(df):
     l = []
@@ -25,10 +29,6 @@ def check(df):
         df_check.columns = ['columns','Data Types','No of Unique Values','No of Duplicated Rows','No of Null Values']
         return df_check 
 
-st.header("Welcome to LISA: LLM Informed Statistical Analysis 🎈", divider='rainbow')
-st.markdown("LISA is an innovative platform designed to automate your data analysis process using advanced Large Language Models (LLM) for insightful inferences. Whether you're a data enthusiast, researcher, or business analyst, LISA simplifies complex data tasks, providing clear and comprehensible explanations for your data.")
-st.markdown("LISA combines the efficiency of automated data processing with the intelligence of modern language models to deliver a seamless and insightful data analysis experience. Empower your data with LISA!")
-st.divider()
 
 with st.sidebar:
     with st.sidebar.expander(":Red[Get Your Api Key Here]"):
@@ -43,100 +43,161 @@ with st.sidebar:
             help="You can get your API key from https://console.groq.com/keys")
     
     st.divider()
-    
 
-# Initialize LLM only if API key is provided
-llm = None
-if groq_api_key:
-    try:
-        llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
-    except Exception as e:
-        st.sidebar.error(f"Error initializing model: {str(e)}")
+    # Initialize LLM only if API key is provided
+    llm = None
+    if groq_api_key:
+        try:
+            llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
+        except Exception as e:
+            st.sidebar.error(f"Error initializing model: {str(e)}")
 
-uploaded_file = st.file_uploader("Upload a CSV file", type=['csv'])
 
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
-    AgGrid(df,theme="alpine")
+with tab1:
+    st.header("Welcome to LISA: LLM Informed Statistical Analysis 🎈", divider='rainbow')
+    st.markdown("LISA is an innovative platform designed to automate your data analysis process using advanced Large Language Models (LLM) for insightful inferences. Whether you're a data enthusiast, researcher, or business analyst, LISA simplifies complex data tasks, providing clear and comprehensible explanations for your data.")
+    st.markdown("LISA combines the efficiency of automated data processing with the intelligence of modern language models to deliver a seamless and insightful data analysis experience. Empower your data with LISA!")
     st.divider()
-
-    option = st.selectbox("Select an option:", ["Show dataset dimensions","Display data description","Verify data integrity", "Summarize numerical data statistics", "Summarize categorical data"])
     
-    if not groq_api_key:
-        st.warning("Please enter your Groq API key in the sidebar to use the analysis features.")
-    elif llm is None:
-        st.error("Failed to initialize the model. Please check your API key.")
-    else:
-        if option == "Show dataset dimensions":
-            
-            shape_of_the_data = df.shape
-            
-            
-        elif option == "Display data description":
-            column_description = df.columns
-            
-            systemmessageprompt = SystemMessagePromptTemplate.from_template( 
-            "You are StatBot, an expert statistical analyst. "
-            "Explain the output in simple English.")
-            humanmessageprompt = HumanMessagePromptTemplate.from_template(
-            'The columns in the dataset are: {columns}')
-            
-            chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
-            formattedchatprompt = chatprompt.format_messages(columns=column_description)
-            response = llm.invoke(formattedchatprompt)
-            response = response.content
-            st.write(response)
-            
-        elif option == "Verify data integrity":
-            df_check = check(df)
-            st.dataframe(df_check)
+    uploaded_file = st.file_uploader("Upload a CSV file", type=['csv'])
+    
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+        AgGrid(df,theme="alpine")
+        st.divider()
 
-            systemmessageprompt = SystemMessagePromptTemplate.from_template( 
-            "You are StatBot, an expert statistical analyst. "
-            "Explain the output in simple English.")
-            humanmessageprompt = HumanMessagePromptTemplate.from_template(
-            'The columns in the dataset are: {df_check}')
-            
-            chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
-            formattedchatprompt = chatprompt.format_messages(df_check=df_check)
-            response = llm.invoke(formattedchatprompt)
-            response = response.content
-            st.write(response)
-            
-        elif option == "Summarize numerical data statistics":
-            describe_numerical = df.describe().T
-            st.dataframe(describe_numerical)
+        option = st.selectbox("Select an option:", ["Show dataset dimensions","Display data description","Verify data integrity", "Summarize numerical data statistics", "Summarize categorical data"])
         
-            systemmessageprompt = SystemMessagePromptTemplate.from_template( 
-            "You are StatBot, an expert statistical analyst. "
-            "Explain the output in simple English.")
-            humanmessageprompt = HumanMessagePromptTemplate.from_template(
-            'The columns in the dataset are: {columns}')
-            
-            chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
-            formattedchatprompt = chatprompt.format_messages(columns=describe_numerical)
-            response = llm.invoke(formattedchatprompt)
-            response = response.content
-            st.write(response)
-            
-        elif option == "Summarize categorical data":
-            categorical_df = df.select_dtypes(include=['object'])
-            if categorical_df.empty:
-                st.write("No categorical columns found.")
-            else:
-                describe_categorical = categorical_df.describe()
-                st.dataframe(describe_categorical)
+        if not groq_api_key:
+            st.warning("Please enter your Groq API key in the sidebar to use the analysis features.")
+        elif llm is None:
+            st.error("Failed to initialize the model. Please check your API key.")
+        else:
+            if option == "Show dataset dimensions":
                 
-            systemmessageprompt = SystemMessagePromptTemplate.from_template( 
-            "You are StatBot, an expert statistical analyst. "
-            "Explain the output in simple English.")
-            humanmessageprompt = HumanMessagePromptTemplate.from_template(
-            'The columns in the dataset are: {columns}')
+                shape_of_the_data = df.shape
+                
+                
+            elif option == "Display data description":
+                column_description = df.columns
+                
+                systemmessageprompt = SystemMessagePromptTemplate.from_template( 
+                "You are StatBot, an expert statistical analyst. "
+                "Explain the output in simple English.")
+                humanmessageprompt = HumanMessagePromptTemplate.from_template(
+                'The columns in the dataset are: {columns}')
+                
+                chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
+                formattedchatprompt = chatprompt.format_messages(columns=column_description)
+                response = llm.invoke(formattedchatprompt)
+                response = response.content
+                st.write(response)
+                
+            elif option == "Verify data integrity":
+                df_check = check(df)
+                st.dataframe(df_check)
+
+                systemmessageprompt = SystemMessagePromptTemplate.from_template( 
+                "You are StatBot, an expert statistical analyst. "
+                "Explain the output in simple English.")
+                humanmessageprompt = HumanMessagePromptTemplate.from_template(
+                'The columns in the dataset are: {df_check}')
+                
+                chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
+                formattedchatprompt = chatprompt.format_messages(df_check=df_check)
+                response = llm.invoke(formattedchatprompt)
+                response = response.content
+                st.write(response)
+                
+            elif option == "Summarize numerical data statistics":
+                describe_numerical = df.describe().T
+                st.dataframe(describe_numerical)
             
-            chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
-            formattedchatprompt = chatprompt.format_messages(columns=describe_categorical)
-            response = llm.invoke(formattedchatprompt)
-            response = response.content
-            st.write(response)
+                systemmessageprompt = SystemMessagePromptTemplate.from_template( 
+                "You are StatBot, an expert statistical analyst. "
+                "Explain the output in simple English.")
+                humanmessageprompt = HumanMessagePromptTemplate.from_template(
+                'The columns in the dataset are: {columns}')
+                
+                chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
+                formattedchatprompt = chatprompt.format_messages(columns=describe_numerical)
+                response = llm.invoke(formattedchatprompt)
+                response = response.content
+                st.write(response)
+                
+            elif option == "Summarize categorical data":
+                categorical_df = df.select_dtypes(include=['object'])
+                if categorical_df.empty:
+                    st.write("No categorical columns found.")
+                else:
+                    describe_categorical = categorical_df.describe()
+                    st.dataframe(describe_categorical)
+                    
+                systemmessageprompt = SystemMessagePromptTemplate.from_template( 
+                "You are StatBot, an expert statistical analyst. "
+                "Explain the output in simple English.")
+                humanmessageprompt = HumanMessagePromptTemplate.from_template(
+                'The columns in the dataset are: {columns}')
+                
+                chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
+                formattedchatprompt = chatprompt.format_messages(columns=describe_categorical)
+                response = llm.invoke(formattedchatprompt)
+                response = response.content
+                st.write(response)
+
+with tab2:
+    # Load environment variables
+    load_dotenv()
+    groq_api_key = os.getenv('GROQ_API_KEY')
+    # groq_api_key = st.secrets["groq_api_key"]
+
+    # Initialize the language model
+
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history=[]
+
+    st.markdown("""
+Our integrated chatbot is available to assist you, providing real-time answers to your data-related queries and enhancing your overall experience with personalized support.
+""")
+    st.markdown("""---""")
+
+
+    def get_response(query,chat_history):
+        template="""
+        You are a helpful assistant. Answer the following the user asks:
+        
+        Chat history:{chat_history}
+        user question:{user_question}
+        """
+        prompt=ChatPromptTemplate.from_template(template)
+        llm = ChatGroq(groq_api_key=groq_api_key,model_name="Llama3-8b-8192")
+        
+        chain=prompt|llm|StrOutputParser()
+        return chain.stream({
+            "chat_history":chat_history,
+            "user_question":query})
+        
+    # conversation
+    for message in st.session_state.chat_history:
+        if isinstance(message,HumanMessage):
+            with st.chat_message("Human"):
+                st.markdown(message.content)
+        else:
+            with st.chat_message("AI"):
+                st.markdown(message.content)
+
+    user_query=st.chat_input("Type your message here")
+    
+    if user_query is not None and user_query!="":
+        st.session_state.chat_history.append(HumanMessage(user_query))
+        
+        with st.chat_message("Human"):
+            st.markdown(user_query)
+            
+        with st.chat_message("AI"):
+            ai_response=st.write_stream(get_response(user_query,st.session_state.chat_history))
+            
+        st.session_state.chat_history.append(AIMessage(ai_response))
+    
 
 
