@@ -73,10 +73,20 @@ with tab1:
         elif llm is None:
             st.error("Failed to initialize the model. Please check your API key.")
         else:
+            
             if option == "Show dataset dimensions":
-                
                 shape_of_the_data = df.shape
+                systemmessageprompt = SystemMessagePromptTemplate.from_template( 
+                "You are StatBot, an expert statistical analyst. "
+                "Explain the output in simple English.")
+                humanmessageprompt = HumanMessagePromptTemplate.from_template(
+                'The columns in the dataset are: {columns}')
                 
+                chatprompt = ChatPromptTemplate.from_messages([systemmessageprompt, humanmessageprompt])
+                formattedchatprompt = chatprompt.format_messages(columns=shape_of_the_data)
+                response = llm.invoke(formattedchatprompt)
+                response = response.content
+                st.write(response)
                 
             elif option == "Display data description":
                 column_description = df.columns
@@ -145,59 +155,54 @@ with tab1:
                 response = response.content
                 st.write(response)
 
+
+
 with tab2:
-    # Load environment variables
-    load_dotenv()
-    groq_api_key = os.getenv('GROQ_API_KEY')
-    # groq_api_key = st.secrets["groq_api_key"]
-
-    # Initialize the language model
-
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history=[]
-
     st.markdown("""
-Our integrated chatbot is available to assist you, providing real-time answers to your data-related queries and enhancing your overall experience with personalized support.
-""")
+    Our integrated chatbot is available to assist you, providing real-time answers to your data-related queries and enhancing your overall experience with personalized support.
+    """)
     st.markdown("""---""")
 
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
 
-    def get_response(query,chat_history):
-        template="""
+    def get_response(query, chat_history):
+        template = """
         You are a helpful assistant. Answer the following the user asks:
         
         Chat history:{chat_history}
         user question:{user_question}
         """
-        prompt=ChatPromptTemplate.from_template(template)
-        llm = ChatGroq(groq_api_key=groq_api_key,model_name="Llama3-8b-8192")
-        
-        chain=prompt|llm|StrOutputParser()
+        prompt = ChatPromptTemplate.from_template(template)
+        chain = prompt | llm | StrOutputParser()
         return chain.stream({
-            "chat_history":chat_history,
-            "user_question":query})
-        
-    # conversation
+            "chat_history": chat_history,
+            "user_question": query})
+
+    # Display chat history
     for message in st.session_state.chat_history:
-        if isinstance(message,HumanMessage):
+        if isinstance(message, HumanMessage):
             with st.chat_message("Human"):
                 st.markdown(message.content)
         else:
             with st.chat_message("AI"):
                 st.markdown(message.content)
 
-    user_query=st.chat_input("Type your message here")
-    
-    if user_query is not None and user_query!="":
-        st.session_state.chat_history.append(HumanMessage(user_query))
+    # Check if API key is provided
+    if not groq_api_key:
+        st.warning("Please enter your Groq API key in the sidebar to use the chatbot.")
+    elif llm is None:
+        st.error("Failed to initialize the model. Please check your API key.")
+    else:
+        user_query = st.chat_input("Type your message here")
         
-        with st.chat_message("Human"):
-            st.markdown(user_query)
+        if user_query is not None and user_query != "":
+            st.session_state.chat_history.append(HumanMessage(user_query))
             
-        with st.chat_message("AI"):
-            ai_response=st.write_stream(get_response(user_query,st.session_state.chat_history))
-            
-        st.session_state.chat_history.append(AIMessage(ai_response))
-    
-
-
+            with st.chat_message("Human"):
+                st.markdown(user_query)
+                
+            with st.chat_message("AI"):
+                ai_response = st.write_stream(get_response(user_query, st.session_state.chat_history))
+                
+            st.session_state.chat_history.append(AIMessage(ai_response))
