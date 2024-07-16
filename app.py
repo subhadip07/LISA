@@ -155,12 +155,8 @@ with tab1:
                 response = response.content
                 st.write(response)
 
-
-
 with tab2:
-    st.markdown("""
-    Our integrated chatbot is available to assist you, providing real-time answers to your data-related queries and enhancing your overall experience with personalized support.
-    """)
+    st.markdown("""Our integrated chatbot is available to assist you, providing real-time answers to your data-related queries and enhancing your overall experience with personalized support.""")
     st.markdown("""---""")
 
     if "chat_history" not in st.session_state:
@@ -176,10 +172,8 @@ with tab2:
         prompt = ChatPromptTemplate.from_template(template)
         chain = prompt | llm | StrOutputParser()
         return chain.stream({
-            "chat_history": chat_history,
-            "user_question": query})
+            "chat_history": chat_history,"user_question": query})
 
-    # Display chat history
     for message in st.session_state.chat_history:
         if isinstance(message, HumanMessage):
             with st.chat_message("Human"):
@@ -187,8 +181,7 @@ with tab2:
         else:
             with st.chat_message("AI"):
                 st.markdown(message.content)
-
-    # Check if API key is provided
+                
     if not groq_api_key:
         st.warning("Please enter your Groq API key in the sidebar to use the chatbot.")
     elif llm is None:
