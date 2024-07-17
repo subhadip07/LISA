@@ -11,7 +11,7 @@ from langchain_core.output_parsers import StrOutputParser
 import os
 
 from functions import check
-from functions import interactive_data_cleaning
+# from functions import interactive_data_cleaning
 
 from dotenv import load_dotenv
 load_dotenv()
