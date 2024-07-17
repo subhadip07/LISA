@@ -10,24 +10,14 @@ from langchain_core.messages import HumanMessage,AIMessage
 from langchain_core.output_parsers import StrOutputParser
 import os
 
+from functions import check
+from functions import interactive_data_cleaning
+
 from dotenv import load_dotenv
 load_dotenv()
 
 st.set_page_config(page_title="LISA : LLM Informed Statistical Analysis ",page_icon=":books:",layout = "wide")
-tab1,tab2=st.tabs(["Home","ChatBot"])
-
-def check(df):
-    l = []
-    columns = df.columns
-    for col in columns:
-        dtypes = df[col].dtypes
-        nunique = df[col].nunique()
-        duplicated = df.duplicated().sum()
-        sum_null = df[col].isnull().sum()
-        l.append([col,dtypes,nunique,duplicated,sum_null])
-        df_check = pd.DataFrame(l)
-        df_check.columns = ['columns','Data Types','No of Unique Values','No of Duplicated Rows','No of Null Values']
-        return df_check 
+tab1, tab2, tab3 = st.tabs(["Home", "ChatBot", "Data Cleaning"])
 
 with st.sidebar:
     with st.sidebar.expander(":Red[Get Your Api Key Here]"):
@@ -72,7 +62,7 @@ with tab1:
     
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
-        AgGrid(df,theme="alpine")
+        AgGrid(df,theme="balham")
         st.divider()
 
         option = st.selectbox("Select an option:", ["Show dataset dimensions","Display data description","Verify data integrity", "Summarize numerical data statistics", "Summarize categorical data"])
@@ -208,3 +198,7 @@ with tab2:
                 ai_response = st.write_stream(get_response(user_query, st.session_state.chat_history))
                 
             st.session_state.chat_history.append(AIMessage(ai_response))
+
+with tab3:
+    interactive_data_cleaning()
+    
