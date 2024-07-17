@@ -29,7 +29,6 @@ def check(df):
         df_check.columns = ['columns','Data Types','No of Unique Values','No of Duplicated Rows','No of Null Values']
         return df_check 
 
-
 with st.sidebar:
     with st.sidebar.expander(":Red[Get Your Api Key Here]"):
         st.markdown("## How to use\n"
@@ -42,16 +41,26 @@ with st.sidebar:
             placeholder="Paste your Groq API key here (gsk_...)",
             help="You can get your API key from https://console.groq.com/keys")
     
+    st.text("The below parameters like temperature and top-p play a crucial role in controlling the randomness and creativity of the generated text. Adjust these parameters according to your requirements.")    
+    with st.sidebar.expander("Model Parameters"):
+        model_name = st.selectbox("Select Model:", ["llama3-8b-8192","llama3-70b-8192","mixtral-8x7b-32768","gemma-7b-it","gemma2-9b-it"])
+        temperature = st.slider("Temperature:", min_value=0.0, max_value=1.0, value=0.5, step=0.1)
+        top_p = st.slider("Top-p:", min_value=0.0, max_value=1.0, value=1.0, step=0.25)
+
     st.divider()
 
     # Initialize LLM only if API key is provided
     llm = None
     if groq_api_key:
         try:
-            llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama3-70b-8192")
+            llm = ChatGroq(
+                groq_api_key=groq_api_key, 
+                model_name=model_name,
+                temperature=temperature,
+                top_p=top_p
+            )
         except Exception as e:
             st.sidebar.error(f"Error initializing model: {str(e)}")
-
 
 with tab1:
     st.header("Welcome to LISA: LLM Informed Statistical Analysis 🎈", divider='rainbow')
