@@ -199,6 +199,6 @@ with tab2:
                 
             st.session_state.chat_history.append(AIMessage(ai_response))
 
-with tab3:
-    interactive_data_cleaning()
+# with tab3:
+#     interactive_data_cleaning()
     
