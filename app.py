@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 st.set_page_config(page_title="LISA : LLM Informed Statistical Analysis ",page_icon=":books:",layout = "wide")
-tab1, tab2, tab3 = st.tabs(["Home", "ChatBot", "Data Cleaning"])
+tab1, tab2 = st.tabs(["Home", "ChatBot"])
 
 with st.sidebar:
     with st.sidebar.expander(":Red[Get Your Api Key Here]"):
