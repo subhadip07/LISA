@@ -9,6 +9,7 @@ from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTem
 from langchain_core.messages import HumanMessage,AIMessage
 from langchain_core.output_parsers import StrOutputParser
 import os
+import pyrebase
 
 from functions import check
 # from functions import interactive_data_cleaning
@@ -16,10 +17,73 @@ from functions import check
 from dotenv import load_dotenv
 load_dotenv()
 
+# Firebase configuration and initialization
+firebaseConfig = {
+    'apiKey': "AIzaSyCW3RIp-Cz1bkK9LdXb7FEoWZ4QdwyoTY8",
+    'authDomain': "lisa-streamlit.firebaseapp.com",
+    'projectId': "lisa-streamlit",
+    'databaseURL': "https://lisa-streamlit-default-rtdb.asia-southeast1.firebasedatabase.app",
+    'storageBucket': "lisa-streamlit.appspot.com",
+    'messagingSenderId': "338108058761",
+    'appId': "1:338108058761:web:d5b286d1273df123f08a58",
+    'measurementId': "G-ZLRFZ610C3"
+  }
+
+firebase = pyrebase.initialize_app(firebaseConfig)
+auth = firebase.auth()
+db = firebase.database()
+
 st.set_page_config(page_title="LISA : LLM Informed Statistical Analysis ",page_icon=":books:",layout = "wide")
 tab1, tab2 = st.tabs(["Home", "ChatBot"])
 
+# Initialize session state for login status
+if 'is_logged_in' not in st.session_state:
+    st.session_state.is_logged_in = False
+
+#sidebar    
 with st.sidebar:
+    st.title("LISA")
+    
+    if not st.session_state.is_logged_in:
+        choice = st.selectbox('login/Signup', ['Login', 'Sign up'])
+        email = st.text_input('Please enter your Email:')
+        password = st.text_input('Please enter your password:', type='password')
+        
+        if choice == 'Login':
+            if st.button('Login'):
+                try:
+                    user = auth.sign_in_with_email_and_password(email, password)
+                    st.session_state.is_logged_in = True
+                    st.success("Logged in successfully!")
+                    st.experimental_rerun()
+                except:
+                    st.error("Invalid credentials. Please try again.")
+        
+        elif choice == 'Sign up':
+            handle = st.text_input('Please input your Email', value='Default')
+            if st.button('Create my Account'):
+                try:
+                    user = auth.create_user_with_email_and_password(email, password)
+                    st.success('Your account is created successfully!')
+                    st.info('Please login using the login option.')
+                except:
+                    st.error("Unable to create account. Please try again.")
+    
+    else:
+        if st.button('Logout'):
+            st.session_state.is_logged_in = False
+            st.experimental_rerun()
+
+
+
+
+
+
+
+
+
+
+
     with st.sidebar.expander(":Red[Get Your Api Key Here]"):
         st.markdown("## How to use\n"
             "1. Enter your [Groq API key](https://console.groq.com/keys) below🔑\n" 
